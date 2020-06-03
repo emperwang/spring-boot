@@ -19,6 +19,12 @@ package sample.freemarker;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+/**
+ * 从这个方法开始  作为入口把
+ * 1. 先看一下注解 SpringBootApplication 做了什么工作呢?
+ * 2. SpringApplication.run 方法做什么工作呢?
+ */
+
 @SpringBootApplication
 public class SampleWebFreeMarkerApplication {
 
