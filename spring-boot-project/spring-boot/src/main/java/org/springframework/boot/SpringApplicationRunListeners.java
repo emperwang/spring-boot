@@ -31,10 +31,11 @@ import org.springframework.util.ReflectionUtils;
  *
  * @author Phillip Webb
  */
+// 此监听器,在整个context的启动过程都有 处理
 class SpringApplicationRunListeners {
 
 	private final Log log;
-
+	// 记录监听器
 	private final List<SpringApplicationRunListener> listeners;
 
 	SpringApplicationRunListeners(Log log, Collection<? extends SpringApplicationRunListener> listeners) {

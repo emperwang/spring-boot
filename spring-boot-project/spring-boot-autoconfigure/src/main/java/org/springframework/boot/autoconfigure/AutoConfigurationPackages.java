@@ -96,10 +96,16 @@ public abstract class AutoConfigurationPackages {
 			constructorArguments.addIndexedArgumentValue(0, addBasePackages(constructorArguments, packageNames));
 		}
 		else {
+			/**
+			 * 1. 可以看到此处创建一个beanDefinition,但是呢具体实例化的类是 BasePackages
+			 * 2. 并且添加了一个构造函数的参数
+			 * 3. BasePackages此类hold刚才那个package路径
+			 */
 			GenericBeanDefinition beanDefinition = new GenericBeanDefinition();
 			beanDefinition.setBeanClass(BasePackages.class);
 			beanDefinition.getConstructorArgumentValues().addIndexedArgumentValue(0, packageNames);
 			beanDefinition.setRole(BeanDefinition.ROLE_INFRASTRUCTURE);
+			// 注册到容器中
 			registry.registerBeanDefinition(BEAN, beanDefinition);
 		}
 	}
@@ -116,10 +122,14 @@ public abstract class AutoConfigurationPackages {
 	 * {@link ImportBeanDefinitionRegistrar} to store the base package from the importing
 	 * configuration.
 	 */
+	// ImportBeanDefinitionRegistrar 此类就是注册beanDefinition到容器中
 	static class Registrar implements ImportBeanDefinitionRegistrar, DeterminableImports {
 
+		//  注册动作
 		@Override
 		public void registerBeanDefinitions(AnnotationMetadata metadata, BeanDefinitionRegistry registry) {
+			// 可以看到此处是创建一个PackageImport类
+			// PackageImport会得到注解所在的package
 			register(registry, new PackageImport(metadata).getPackageName());
 		}
 
@@ -138,6 +148,7 @@ public abstract class AutoConfigurationPackages {
 		private final String packageName;
 
 		PackageImport(AnnotationMetadata metadata) {
+			// 获取到注解AutoConfigurationPackage所在的package
 			this.packageName = ClassUtils.getPackageName(metadata.getClassName());
 		}
 

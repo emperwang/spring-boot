@@ -56,8 +56,10 @@ class SpringApplicationBannerPrinter {
 	}
 
 	public Banner print(Environment environment, Class<?> sourceClass, Log logger) {
+		// 先获取banner
 		Banner banner = getBanner(environment);
 		try {
+			// 把banner转换为字符串后,打印
 			logger.info(createStringFromBanner(banner, environment, sourceClass));
 		}
 		catch (UnsupportedEncodingException ex) {
@@ -112,8 +114,10 @@ class SpringApplicationBannerPrinter {
 	private String createStringFromBanner(Banner banner, Environment environment, Class<?> mainApplicationClass)
 			throws UnsupportedEncodingException {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		// 把banner打印到 baos一个ByteArray中
 		banner.printBanner(environment, mainApplicationClass, new PrintStream(baos));
 		String charset = environment.getProperty("spring.banner.charset", "UTF-8");
+		// 转换为字符串
 		return baos.toString(charset);
 	}
 

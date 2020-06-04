@@ -39,6 +39,7 @@ class SpringBootBanner implements Banner {
 
 	private static final int STRAP_LINE_SIZE = 42;
 
+	// 具体的banner打印
 	@Override
 	public void printBanner(Environment environment, Class<?> sourceClass, PrintStream printStream) {
 		for (String line : BANNER) {
