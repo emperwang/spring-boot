@@ -77,7 +77,9 @@ import org.springframework.core.io.support.SpringFactoriesLoader;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
+// 此注解是实现注册启动类下面的package中的组件的
 @AutoConfigurationPackage
+// 可以看到,开启自动配置会注入一个类
 @Import(AutoConfigurationImportSelector.class)
 public @interface EnableAutoConfiguration {
 

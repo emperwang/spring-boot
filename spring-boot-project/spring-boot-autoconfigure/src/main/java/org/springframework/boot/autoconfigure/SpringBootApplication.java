@@ -48,8 +48,12 @@ import org.springframework.data.repository.Repository;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
+// SpringBootConfiguration就是Configuration,表示启动类中也可以编写一些配置
 @SpringBootConfiguration
+// 自动配置的注解(springboot开箱即用的主要实现)
+// 以此为入口,看一些开箱即用的实现
 @EnableAutoConfiguration
+// 组件扫描
 @ComponentScan(excludeFilters = { @Filter(type = FilterType.CUSTOM, classes = TypeExcludeFilter.class),
 		@Filter(type = FilterType.CUSTOM, classes = AutoConfigurationExcludeFilter.class) })
 public @interface SpringBootApplication {
