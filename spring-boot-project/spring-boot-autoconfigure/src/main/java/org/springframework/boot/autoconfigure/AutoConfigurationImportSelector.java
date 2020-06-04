@@ -113,11 +113,16 @@ public class AutoConfigurationImportSelector implements DeferredImportSelector, 
 			return EMPTY_ENTRY;
 		}
 		AnnotationAttributes attributes = getAttributes(annotationMetadata);
+		// 从META-INF/spring.factories中加载EnableAutoConfiguration此key对应的配置类到容器中
 		List<String> configurations = getCandidateConfigurations(annotationMetadata, attributes);
+		// 去重
 		configurations = removeDuplicates(configurations);
+		// 得到 注解上的exclusion
 		Set<String> exclusions = getExclusions(annotationMetadata, attributes);
+		// 利用exclusion条件, 去除满足exclusion的配置
 		checkExcludedClasses(configurations, exclusions);
 		configurations.removeAll(exclusions);
+		//
 		configurations = filter(configurations, autoConfigurationMetadata);
 		fireAutoConfigurationImportEvents(configurations, exclusions);
 		return new AutoConfigurationEntry(configurations, exclusions);
@@ -168,6 +173,10 @@ public class AutoConfigurationImportSelector implements DeferredImportSelector, 
 	 * @return a list of candidate configurations
 	 */
 	protected List<String> getCandidateConfigurations(AnnotationMetadata metadata, AnnotationAttributes attributes) {
+		/**
+		 * 从META-INF/spring.factories中加载EnableAutoConfiguration这个key对应的项目
+		 * 此EnableAutoConfiguration对应很多的配置类; 此配置类有大约100多个,来达到对对应的模块自动配置
+		 */
 		List<String> configurations = SpringFactoriesLoader.loadFactoryNames(getSpringFactoriesLoaderFactoryClass(),
 				getBeanClassLoader());
 		Assert.notEmpty(configurations, "No auto configuration classes found in META-INF/spring.factories. If you "
