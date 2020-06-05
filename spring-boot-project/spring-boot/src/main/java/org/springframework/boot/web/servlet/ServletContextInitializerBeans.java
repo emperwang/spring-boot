@@ -80,9 +80,12 @@ public class ServletContextInitializerBeans extends AbstractCollection<ServletCo
 	public ServletContextInitializerBeans(ListableBeanFactory beanFactory,
 			Class<? extends ServletContextInitializer>... initializerTypes) {
 		this.initializers = new LinkedMultiValueMap<>();
+		// 此处应该ServletContextInitializer, 也就是说initializerTypes为ServletContextInitializer
 		this.initializerTypes = (initializerTypes.length != 0) ? Arrays.asList(initializerTypes)
 				: Collections.singletonList(ServletContextInitializer.class);
+		// 获取initializerTypes这参数记录的类型的bean到this.initlializers
 		addServletContextInitializerBeans(beanFactory);
+		// 注册 Servelt.class Filter.class到 initializers
 		addAdaptableBeans(beanFactory);
 		List<ServletContextInitializer> sortedInitializers = this.initializers.values().stream()
 				.flatMap((value) -> value.stream().sorted(AnnotationAwareOrderComparator.INSTANCE))
@@ -93,13 +96,15 @@ public class ServletContextInitializerBeans extends AbstractCollection<ServletCo
 
 	private void addServletContextInitializerBeans(ListableBeanFactory beanFactory) {
 		for (Class<? extends ServletContextInitializer> initializerType : this.initializerTypes) {
+			// 从容器中查找ServletContextInitializer类型的bean,并添加到  this.initializers
 			for (Entry<String, ? extends ServletContextInitializer> initializerBean : getOrderedBeansOfType(beanFactory,
 					initializerType)) {
 				addServletContextInitializerBean(initializerBean.getKey(), initializerBean.getValue(), beanFactory);
 			}
 		}
 	}
-
+	// 把ServletRegistrationBean   FilterRegistrationBean   ServletListenerRegistrationBean等都添加到 this.initializers
+	// 这些bean是对context中添加servlet filter listener的操作
 	private void addServletContextInitializerBean(String beanName, ServletContextInitializer initializer,
 			ListableBeanFactory beanFactory) {
 		if (initializer instanceof ServletRegistrationBean) {
@@ -150,8 +155,13 @@ public class ServletContextInitializerBeans extends AbstractCollection<ServletCo
 	@SuppressWarnings("unchecked")
 	protected void addAdaptableBeans(ListableBeanFactory beanFactory) {
 		MultipartConfigElement multipartConfig = getMultipartConfig(beanFactory);
+		// 获取Servelt类型的bean,并使用ServletRegistrationBeanAdapter包装,最终是创建为ServletRegistrationBean
+		// 注册哦 ServletRegistrationBean  FilterRegistrationBean 都是ServletContextInitializer的子类,通过onstartup方法
+		// 把servlet  filter listener注册到context中
 		addAsRegistrationBean(beanFactory, Servlet.class, new ServletRegistrationBeanAdapter(multipartConfig));
+		// 从容器中获取Filter类型的bean,使用FilterRegistrationBeanAdapter进行包装,最终胜出FilterRegistrationBean
 		addAsRegistrationBean(beanFactory, Filter.class, new FilterRegistrationBeanAdapter());
+		// listener的注册
 		for (Class<?> listenerType : ServletListenerRegistrationBean.getSupportedTypes()) {
 			addAsRegistrationBean(beanFactory, EventListener.class, (Class<EventListener>) listenerType,
 					new ServletListenerRegistrationBeanAdapter());
@@ -197,17 +207,20 @@ public class ServletContextInitializerBeans extends AbstractCollection<ServletCo
 			}
 		}.getOrder(value);
 	}
-
+	// 从容器中获取特定类的bean  并进行排序
 	private <T> List<Entry<String, T>> getOrderedBeansOfType(ListableBeanFactory beanFactory, Class<T> type) {
 		return getOrderedBeansOfType(beanFactory, type, Collections.emptySet());
 	}
-
+	// 获取具体类型的bean 排序并返回
 	private <T> List<Entry<String, T>> getOrderedBeansOfType(ListableBeanFactory beanFactory, Class<T> type,
 			Set<?> excludes) {
+		// 从容器中获取指定类型的bena的name
 		String[] names = beanFactory.getBeanNamesForType(type, true, false);
 		Map<String, T> map = new LinkedHashMap<>();
+		// 根据名字进行遍历,并进行了过滤
 		for (String name : names) {
 			if (!excludes.contains(name) && !ScopedProxyUtils.isScopedTarget(name)) {
+				// 记性初始化
 				T bean = beanFactory.getBean(name, type);
 				if (!excludes.contains(bean)) {
 					map.put(name, bean);
@@ -216,6 +229,7 @@ public class ServletContextInitializerBeans extends AbstractCollection<ServletCo
 		}
 		List<Entry<String, T>> beans = new ArrayList<>();
 		beans.addAll(map.entrySet());
+		// 排序
 		beans.sort((o1, o2) -> AnnotationAwareOrderComparator.INSTANCE.compare(o1.getValue(), o2.getValue()));
 		return beans;
 	}

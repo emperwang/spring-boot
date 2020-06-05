@@ -49,6 +49,7 @@ import org.springframework.http.converter.support.AllEncompassingFormHttpMessage
  * @author Artsiom Yudovin
  * @since 1.3.0
  */
+// 一个监听器
 @Order(LoggingApplicationListener.DEFAULT_ORDER + 1)
 public class BackgroundPreinitializer implements ApplicationListener<SpringApplicationEvent> {
 
@@ -69,6 +70,7 @@ public class BackgroundPreinitializer implements ApplicationListener<SpringAppli
 	public void onApplicationEvent(SpringApplicationEvent event) {
 		if (!Boolean.getBoolean(IGNORE_BACKGROUNDPREINITIALIZER_PROPERTY_NAME)
 				&& event instanceof ApplicationStartingEvent && preinitializationStarted.compareAndSet(false, true)) {
+			// 使用一个线程来做一些初始化
 			performPreinitialization();
 		}
 		if ((event instanceof ApplicationReadyEvent || event instanceof ApplicationFailedEvent)
@@ -88,8 +90,11 @@ public class BackgroundPreinitializer implements ApplicationListener<SpringAppli
 
 				@Override
 				public void run() {
+					// 转换器初始化
 					runSafely(new ConversionServiceInitializer());
+					// 校验器
 					runSafely(new ValidationInitializer());
+					// 消息转换器
 					runSafely(new MessageConverterInitializer());
 					runSafely(new MBeanFactoryInitializer());
 					runSafely(new JacksonInitializer());

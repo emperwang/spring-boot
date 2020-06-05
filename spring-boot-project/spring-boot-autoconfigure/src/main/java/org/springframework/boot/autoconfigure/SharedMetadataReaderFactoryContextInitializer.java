@@ -51,6 +51,8 @@ class SharedMetadataReaderFactoryContextInitializer
 	public static final String BEAN_NAME = "org.springframework.boot.autoconfigure."
 			+ "internalCachingMetadataReaderFactory";
 
+	// 此初始化函数,主要是指注册一个CachingMetadataReaderFactoryPostProcessor bean工厂的后置处理器
+	// CachingMetadataReaderFactoryPostProcessor此后置处理器呢,又想容器注册了bean SharedMetadataReaderFactoryBean
 	@Override
 	public void initialize(ConfigurableApplicationContext applicationContext) {
 		applicationContext.addBeanFactoryPostProcessor(new CachingMetadataReaderFactoryPostProcessor());

@@ -319,6 +319,9 @@ public class SpringApplication {
 			// 5. 打印banner
 			Banner printedBanner = printBanner(environment);
 			// 6. 创建ApplicationContext
+			// 对于web项目,应该会创建 AnnotationConfigServletWebServerApplicationContext
+			// 注意:AnnotationConfigServletWebServerApplicationContext的父类 ServletWebServerApplicationContext
+			// 重载了 onRefresh()方法, 当容器进行刷新操作是,会调用此方法, 此方法会创建 servlet容器
 			context = createApplicationContext();
 			// 获取SpringBootExceptionReporter的实例
 			exceptionReporters = getSpringFactoriesInstances(SpringBootExceptionReporter.class,
@@ -629,6 +632,7 @@ public class SpringApplication {
 						ex);
 			}
 		}
+		// 通过构造器进行创建
 		return (ConfigurableApplicationContext) BeanUtils.instantiateClass(contextClass);
 	}
 

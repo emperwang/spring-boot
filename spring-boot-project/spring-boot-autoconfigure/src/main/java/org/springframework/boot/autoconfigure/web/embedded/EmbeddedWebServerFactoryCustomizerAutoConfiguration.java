@@ -41,8 +41,12 @@ import org.springframework.core.env.Environment;
  * @author Phillip Webb
  * @since 2.0.0
  */
+// springboot是如何启动servlet容器的呢?
+// 就是在这里启动的了.
 @Configuration
+// 必须是一个web工程;
 @ConditionalOnWebApplication
+// 引入一个配置类 比如端口  contextPath等信息
 @EnableConfigurationProperties(ServerProperties.class)
 public class EmbeddedWebServerFactoryCustomizerAutoConfiguration {
 
@@ -52,7 +56,8 @@ public class EmbeddedWebServerFactoryCustomizerAutoConfiguration {
 	@Configuration
 	@ConditionalOnClass({ Tomcat.class, UpgradeProtocol.class })
 	public static class TomcatWebServerFactoryCustomizerConfiguration {
-
+		// tomcat容器
+		// 看一下这个吧
 		@Bean
 		public TomcatWebServerFactoryCustomizer tomcatWebServerFactoryCustomizer(Environment environment,
 				ServerProperties serverProperties) {
@@ -67,7 +72,7 @@ public class EmbeddedWebServerFactoryCustomizerAutoConfiguration {
 	@Configuration
 	@ConditionalOnClass({ Server.class, Loader.class, WebAppContext.class })
 	public static class JettyWebServerFactoryCustomizerConfiguration {
-
+		// jetty容器
 		@Bean
 		public JettyWebServerFactoryCustomizer jettyWebServerFactoryCustomizer(Environment environment,
 				ServerProperties serverProperties) {
@@ -82,7 +87,7 @@ public class EmbeddedWebServerFactoryCustomizerAutoConfiguration {
 	@Configuration
 	@ConditionalOnClass({ Undertow.class, SslClientAuthMode.class })
 	public static class UndertowWebServerFactoryCustomizerConfiguration {
-
+		// undertom  容器
 		@Bean
 		public UndertowWebServerFactoryCustomizer undertowWebServerFactoryCustomizer(Environment environment,
 				ServerProperties serverProperties) {

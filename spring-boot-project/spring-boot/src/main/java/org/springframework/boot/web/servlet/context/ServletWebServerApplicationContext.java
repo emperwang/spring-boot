@@ -150,6 +150,7 @@ public class ServletWebServerApplicationContext extends GenericWebApplicationCon
 	protected void onRefresh() {
 		super.onRefresh();
 		try {
+			// 创建webServer,也就是会创建容器
 			createWebServer();
 		}
 		catch (Throwable ex) {
@@ -174,9 +175,15 @@ public class ServletWebServerApplicationContext extends GenericWebApplicationCon
 
 	private void createWebServer() {
 		WebServer webServer = this.webServer;
+		// 获取seveltContext
 		ServletContext servletContext = getServletContext();
 		if (webServer == null && servletContext == null) {
+			// getWebServerFactory获取创建容器的工厂类
 			ServletWebServerFactory factory = getWebServerFactory();
+			// 调用其getWebServer进行创建
+			// getSelfInitializer() 获取容器中的ServletContextInitializer并调用其onStartUp方法,此操作会把servelt
+			// filter listener 注册到context中
+			// todo * * * * 重要
 			this.webServer = factory.getWebServer(getSelfInitializer());
 		}
 		else if (servletContext != null) {
@@ -187,7 +194,9 @@ public class ServletWebServerApplicationContext extends GenericWebApplicationCon
 				throw new ApplicationContextException("Cannot initialize servlet context", ex);
 			}
 		}
+		// 对servletConfigInitParams servletContextInitParams参数的获取
 		initPropertySources();
+		// 至此 servlet 容器就启动了
 	}
 
 	/**
@@ -198,6 +207,7 @@ public class ServletWebServerApplicationContext extends GenericWebApplicationCon
 	 */
 	protected ServletWebServerFactory getWebServerFactory() {
 		// Use bean names so that we don't consider the hierarchy
+		// 从容器中获取ServletWebServerFactory类型的类
 		String[] beanNames = getBeanFactory().getBeanNamesForType(ServletWebServerFactory.class);
 		if (beanNames.length == 0) {
 			throw new ApplicationContextException("Unable to start ServletWebServerApplicationContext due to missing "
@@ -207,6 +217,7 @@ public class ServletWebServerApplicationContext extends GenericWebApplicationCon
 			throw new ApplicationContextException("Unable to start ServletWebServerApplicationContext due to multiple "
 					+ "ServletWebServerFactory beans : " + StringUtils.arrayToCommaDelimitedString(beanNames));
 		}
+		// 实例化ServletWebServerFactory类型的第一个类
 		return getBeanFactory().getBean(beanNames[0], ServletWebServerFactory.class);
 	}
 
@@ -224,7 +235,12 @@ public class ServletWebServerApplicationContext extends GenericWebApplicationCon
 		prepareWebApplicationContext(servletContext);
 		registerApplicationScope(servletContext);
 		WebApplicationContextUtils.registerEnvironmentBeans(getBeanFactory(), servletContext);
+		// 获取容器中ServletContextInitializer
+		// servletContextInitializer的onstartup方法调用其子类ServletRegistrationBean FilterRegistrationBean等的方法
+		// 把servelt filter listener注册到了 tomcat中的context上
 		for (ServletContextInitializer beans : getServletContextInitializerBeans()) {
+			// 1. 此步骤会把servlet filter listener 注册到context上
+			// 2.
 			beans.onStartup(servletContext);
 		}
 	}
@@ -250,6 +266,7 @@ public class ServletWebServerApplicationContext extends GenericWebApplicationCon
 	 * @return the servlet initializer beans
 	 */
 	protected Collection<ServletContextInitializer> getServletContextInitializerBeans() {
+		// 对容器中的ServletContextInitializer进行了包装
 		return new ServletContextInitializerBeans(getBeanFactory());
 	}
 
@@ -261,6 +278,7 @@ public class ServletWebServerApplicationContext extends GenericWebApplicationCon
 	 * @param servletContext the operational servlet context
 	 */
 	protected void prepareWebApplicationContext(ServletContext servletContext) {
+		// 获取根容器
 		Object rootContext = servletContext.getAttribute(WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE);
 		if (rootContext != null) {
 			if (rootContext == this) {

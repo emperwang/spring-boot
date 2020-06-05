@@ -43,9 +43,13 @@ import org.springframework.transaction.PlatformTransactionManager;
  * @author Kazuki Shimizu
  * @since 1.0.0
  */
+// 数据源事务管理器的初始化
+// 此处要看之前  先回忆一下spring的事务是如何配置的
 @Configuration
+// 依赖的类
 @ConditionalOnClass({ JdbcTemplate.class, PlatformTransactionManager.class })
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
+// 导入的配置类
 @EnableConfigurationProperties(DataSourceProperties.class)
 public class DataSourceTransactionManagerAutoConfiguration {
 
@@ -63,6 +67,7 @@ public class DataSourceTransactionManagerAutoConfiguration {
 			this.transactionManagerCustomizers = transactionManagerCustomizers.getIfAvailable();
 		}
 
+		// 创建事务管理器
 		@Bean
 		@ConditionalOnMissingBean(PlatformTransactionManager.class)
 		public DataSourceTransactionManager transactionManager(DataSourceProperties properties) {

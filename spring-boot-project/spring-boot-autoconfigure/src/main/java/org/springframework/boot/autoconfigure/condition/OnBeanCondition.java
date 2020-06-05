@@ -66,6 +66,7 @@ import org.springframework.util.StringUtils;
  * @see ConditionalOnMissingBean
  * @see ConditionalOnSingleCandidate
  */
+// 对ConditionalOnBean  ConditionalOnMissingBean这些条件注解解析
 @Order(Ordered.LOWEST_PRECEDENCE)
 class OnBeanCondition extends FilteringSpringBootCondition implements ConfigurationCondition {
 

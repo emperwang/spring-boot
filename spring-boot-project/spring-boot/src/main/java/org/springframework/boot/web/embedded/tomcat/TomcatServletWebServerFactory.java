@@ -162,13 +162,19 @@ public class TomcatServletWebServerFactory extends AbstractServletWebServerFacto
 				: new ArrayList<>();
 	}
 
+	/**
+	 * todo 真正创建 tomcat的地方
+	 *  创建servlet容器
+	 */
 	@Override
 	public WebServer getWebServer(ServletContextInitializer... initializers) {
 		Tomcat tomcat = new Tomcat();
 		File baseDir = (this.baseDirectory != null) ? this.baseDirectory : createTempDir("tomcat");
 		tomcat.setBaseDir(baseDir.getAbsolutePath());
+		// 连接器
 		Connector connector = new Connector(this.protocol);
 		tomcat.getService().addConnector(connector);
+		// 对连接器的一些配置,如端口, urlencode, 是否开始ssl
 		customizeConnector(connector);
 		tomcat.setConnector(connector);
 		tomcat.getHost().setAutoDeploy(false);
@@ -176,7 +182,9 @@ public class TomcatServletWebServerFactory extends AbstractServletWebServerFacto
 		for (Connector additionalConnector : this.additionalTomcatConnectors) {
 			tomcat.getService().addConnector(additionalConnector);
 		}
+		// 对context进行了很多的 custom操作
 		prepareContext(tomcat.getHost(), initializers);
+		// 根据创建的tomcat进行启动操作
 		return getTomcatWebServer(tomcat);
 	}
 
@@ -193,15 +201,19 @@ public class TomcatServletWebServerFactory extends AbstractServletWebServerFacto
 		if (documentRoot != null) {
 			context.setResources(new LoaderHidingResourceRoot(context));
 		}
+		// 设置context的name 以及context的path
 		context.setName(getContextPath());
 		context.setDisplayName(getDisplayName());
 		context.setPath(getContextPath());
 		File docBase = (documentRoot != null) ? documentRoot : createTempDir("tomcat-docbase");
 		context.setDocBase(docBase.getAbsolutePath());
+		// 添加一个监听器, 此监听器功能很多..
+		// 1. 处理server listener filter的注解
 		context.addLifecycleListener(new FixContextListener());
 		context.setParentClassLoader((this.resourceLoader != null) ? this.resourceLoader.getClassLoader()
 				: ClassUtils.getDefaultClassLoader());
 		resetDefaultLocaleMapping(context);
+		// 配置locale的映射,此和编码有关
 		addLocaleMappings(context);
 		context.setUseRelativeRedirects(false);
 		try {
@@ -218,6 +230,7 @@ public class TomcatServletWebServerFactory extends AbstractServletWebServerFacto
 		if (isRegisterDefaultServlet()) {
 			addDefaultServlet(context);
 		}
+		// 注册jsp的解析器
 		if (shouldRegisterJspServlet()) {
 			addJspServlet(context);
 			addJasperInitializer(context);
@@ -225,7 +238,12 @@ public class TomcatServletWebServerFactory extends AbstractServletWebServerFacto
 		context.addLifecycleListener(new StaticResourceConfigurer(context));
 		ServletContextInitializer[] initializersToUse = mergeInitializers(initializers);
 		host.addChild(context);
+		// 1. 注册ServletContextInitializer到tomcat中
+		// 2. 注册监听器
+		// 3. 配置sesison
+		// 4. 对context调用TomcatContextCustomizer.customize 再次进行配置
 		configureContext(context, initializersToUse);
+		// 子类扩展
 		postProcessContext(context);
 	}
 
@@ -330,6 +348,7 @@ public class TomcatServletWebServerFactory extends AbstractServletWebServerFacto
 	 * @param initializers initializers to apply
 	 */
 	protected void configureContext(Context context, ServletContextInitializer[] initializers) {
+		// TomcatStarter 此是调用ServletContextInitializer onStartUp方法的地址
 		TomcatStarter starter = new TomcatStarter(initializers);
 		if (context instanceof TomcatEmbeddedContext) {
 			TomcatEmbeddedContext embeddedContext = (TomcatEmbeddedContext) context;
@@ -337,6 +356,7 @@ public class TomcatServletWebServerFactory extends AbstractServletWebServerFacto
 			embeddedContext.setFailCtxIfServletStartFails(true);
 		}
 		context.addServletContainerInitializer(starter, NO_CLASSES);
+		// 添加监听器到  context
 		for (LifecycleListener lifecycleListener : this.contextLifecycleListeners) {
 			context.addLifecycleListener(lifecycleListener);
 		}
@@ -349,8 +369,10 @@ public class TomcatServletWebServerFactory extends AbstractServletWebServerFacto
 		for (MimeMappings.Mapping mapping : getMimeMappings()) {
 			context.addMimeMapping(mapping.getExtension(), mapping.getMimeType());
 		}
+		// 配置session
 		configureSession(context);
 		new DisableReferenceClearingContextCustomizer().customize(context);
+		// 使用注册的 TomcatContextCustomizer 对context再次进行 custom 操作
 		for (TomcatContextCustomizer customizer : this.tomcatContextCustomizers) {
 			customizer.customize(context);
 		}
@@ -413,6 +435,7 @@ public class TomcatServletWebServerFactory extends AbstractServletWebServerFacto
 	 * @return a new {@link TomcatWebServer} instance
 	 */
 	protected TomcatWebServer getTomcatWebServer(Tomcat tomcat) {
+		// 创建tomcatServer
 		return new TomcatWebServer(tomcat, getPort() >= 0);
 	}
 

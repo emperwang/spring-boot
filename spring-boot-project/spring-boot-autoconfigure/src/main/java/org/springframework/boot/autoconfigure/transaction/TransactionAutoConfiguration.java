@@ -45,10 +45,13 @@ import org.springframework.transaction.support.TransactionTemplate;
  * @author Stephane Nicoll
  * @since 1.3.0
  */
+// 事务的自动化配置; 主要是EnableTransactionManagement注解
 @Configuration
 @ConditionalOnClass(PlatformTransactionManager.class)
+// 初始化的顺序指定一下
 @AutoConfigureAfter({ JtaAutoConfiguration.class, HibernateJpaAutoConfiguration.class,
 		DataSourceTransactionManagerAutoConfiguration.class, Neo4jDataAutoConfiguration.class })
+// 配置文件
 @EnableConfigurationProperties(TransactionProperties.class)
 public class TransactionAutoConfiguration {
 
@@ -76,13 +79,15 @@ public class TransactionAutoConfiguration {
 		}
 
 	}
-
+	// 内部配置类
 	@Configuration
+	// 依赖bean
 	@ConditionalOnBean(PlatformTransactionManager.class)
 	@ConditionalOnMissingBean(AbstractTransactionManagementConfiguration.class)
 	public static class EnableTransactionManagementConfiguration {
-
+		// jdk动态代理,来创建事务的aop
 		@Configuration
+		// 打开事务,此EnableTransactionManagement会注入事务相关的bean, 在事务管理中举足轻重
 		@EnableTransactionManagement(proxyTargetClass = false)
 		@ConditionalOnProperty(prefix = "spring.aop", name = "proxy-target-class", havingValue = "false",
 				matchIfMissing = false)
@@ -91,6 +96,7 @@ public class TransactionAutoConfiguration {
 		}
 
 		@Configuration
+		// 打开使用; 设置使用cglib代理
 		@EnableTransactionManagement(proxyTargetClass = true)
 		@ConditionalOnProperty(prefix = "spring.aop", name = "proxy-target-class", havingValue = "true",
 				matchIfMissing = true)

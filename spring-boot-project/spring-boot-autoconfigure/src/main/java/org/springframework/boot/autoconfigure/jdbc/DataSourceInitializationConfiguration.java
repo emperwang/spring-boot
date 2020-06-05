@@ -42,6 +42,7 @@ class DataSourceInitializationConfiguration {
 
 		private static final String BEAN_NAME = "dataSourceInitializerPostProcessor";
 
+		// 注册一个 dataSourceInitializerPostProcessor bean到容器
 		@Override
 		public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata,
 				BeanDefinitionRegistry registry) {

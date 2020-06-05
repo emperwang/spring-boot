@@ -58,7 +58,7 @@ public class TomcatWebServerFactoryCustomizer
 	private final Environment environment;
 
 	private final ServerProperties serverProperties;
-
+	//  记录下环境 以及  servelt配置
 	public TomcatWebServerFactoryCustomizer(Environment environment, ServerProperties serverProperties) {
 		this.environment = environment;
 		this.serverProperties = serverProperties;

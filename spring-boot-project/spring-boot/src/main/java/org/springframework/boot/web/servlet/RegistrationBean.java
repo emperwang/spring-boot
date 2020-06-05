@@ -50,6 +50,7 @@ public abstract class RegistrationBean implements ServletContextInitializer, Ord
 			logger.info(StringUtils.capitalize(description) + " was not registered (disabled)");
 			return;
 		}
+		// 注册动作
 		register(description, servletContext);
 	}
 

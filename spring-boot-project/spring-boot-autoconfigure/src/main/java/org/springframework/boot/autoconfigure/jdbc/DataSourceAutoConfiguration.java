@@ -50,6 +50,7 @@ import org.springframework.util.StringUtils;
  * @author Kazuki Shimizu
  * @since 1.0.0
  */
+// 数据源的初始化
 @Configuration
 @ConditionalOnClass({ DataSource.class, EmbeddedDatabaseType.class })
 @EnableConfigurationProperties(DataSourceProperties.class)

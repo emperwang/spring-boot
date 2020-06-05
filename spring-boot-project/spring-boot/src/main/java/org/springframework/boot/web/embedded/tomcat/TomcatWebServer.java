@@ -83,6 +83,7 @@ public class TomcatWebServer implements WebServer {
 		Assert.notNull(tomcat, "Tomcat Server must not be null");
 		this.tomcat = tomcat;
 		this.autoStart = autoStart;
+		// 初始化
 		initialize();
 	}
 
@@ -90,8 +91,9 @@ public class TomcatWebServer implements WebServer {
 		logger.info("Tomcat initialized with port(s): " + getPortsDescription(false));
 		synchronized (this.monitor) {
 			try {
+				// 添加engine
 				addInstanceIdToEngineName();
-
+				// 查找context
 				Context context = findContext();
 				context.addLifecycleListener((event) -> {
 					if (context.equals(event.getSource()) && Lifecycle.START_EVENT.equals(event.getType())) {
@@ -100,7 +102,7 @@ public class TomcatWebServer implements WebServer {
 						removeServiceConnectors();
 					}
 				});
-
+				// 启动
 				// Start the server to trigger initialization listeners
 				this.tomcat.start();
 
@@ -116,6 +118,7 @@ public class TomcatWebServer implements WebServer {
 
 				// Unlike Jetty, all Tomcat threads are daemon threads. We create a
 				// blocking non-daemon to stop immediate shutdown
+				// 防止tomcat容器退出
 				startDaemonAwaitThread();
 			}
 			catch (Exception ex) {

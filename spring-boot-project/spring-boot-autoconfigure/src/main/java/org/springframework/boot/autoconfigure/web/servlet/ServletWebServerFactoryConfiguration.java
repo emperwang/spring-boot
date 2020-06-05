@@ -58,6 +58,7 @@ class ServletWebServerFactoryConfiguration {
 
 		@Bean
 		public TomcatServletWebServerFactory tomcatServletWebServerFactory() {
+			// tomcat 容器
 			return new TomcatServletWebServerFactory();
 		}
 

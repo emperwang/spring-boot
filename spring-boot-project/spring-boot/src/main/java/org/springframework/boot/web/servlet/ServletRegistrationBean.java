@@ -172,9 +172,15 @@ public class ServletRegistrationBean<T extends Servlet> extends DynamicRegistrat
 		return "servlet " + getServletName();
 	}
 
+	/**
+	 * todo 重点
+	 * ServletRegistrationBean 是ServletContextInitializer的子类
+	 * ServletContextInitializer的onstartup方法一直调用到此, 就是把servlet注册到 context中
+	 */
 	@Override
 	protected ServletRegistration.Dynamic addRegistration(String description, ServletContext servletContext) {
 		String name = getServletName();
+		// 把servelt添加到context中
 		return servletContext.addServlet(name, this.servlet);
 	}
 

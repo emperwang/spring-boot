@@ -76,7 +76,7 @@ public class ConditionEvaluationReportLoggingListener
 	public LogLevel getLogLevelForReport() {
 		return this.logLevelForReport;
 	}
-
+	// 此初始化向容器中 添加一个ApplicationListenter  ConditionEvaluationReportListener
 	@Override
 	public void initialize(ConfigurableApplicationContext applicationContext) {
 		this.applicationContext = applicationContext;

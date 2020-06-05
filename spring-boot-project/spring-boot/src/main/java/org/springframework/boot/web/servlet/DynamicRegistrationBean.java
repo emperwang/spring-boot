@@ -105,6 +105,7 @@ public abstract class DynamicRegistrationBean<D extends Registration.Dynamic> ex
 
 	@Override
 	protected final void register(String description, ServletContext servletContext) {
+		// 真是的注册操作
 		D registration = addRegistration(description, servletContext);
 		if (registration == null) {
 			logger.info(
@@ -117,7 +118,9 @@ public abstract class DynamicRegistrationBean<D extends Registration.Dynamic> ex
 	protected abstract D addRegistration(String description, ServletContext servletContext);
 
 	protected void configure(D registration) {
+		// 配置是否支持异步
 		registration.setAsyncSupported(this.asyncSupported);
+		// 初始化参数
 		if (!this.initParameters.isEmpty()) {
 			registration.setInitParameters(this.initParameters);
 		}

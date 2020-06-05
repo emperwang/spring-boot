@@ -54,8 +54,16 @@ import org.springframework.util.ObjectUtils;
 @Configuration
 @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
 @ConditionalOnClass(ServletRequest.class)
+// 必须是servlet类型
 @ConditionalOnWebApplication(type = Type.SERVLET)
+// servelt的配置
 @EnableConfigurationProperties(ServerProperties.class)
+/**
+ * 此处注入了很多bean到容器中
+ * 1. BeanPostProcessorsRegistrar为一个后置处理器
+ * 2. EmbeddedTomcat  一个创建tomcat容器的工厂类
+ * 3. EmbeddedJetty
+ */
 @Import({ ServletWebServerFactoryAutoConfiguration.BeanPostProcessorsRegistrar.class,
 		ServletWebServerFactoryConfiguration.EmbeddedTomcat.class,
 		ServletWebServerFactoryConfiguration.EmbeddedJetty.class,
