@@ -39,6 +39,7 @@ import org.springframework.kafka.transaction.KafkaAwareTransactionManager;
  * @author Eddú Meléndez
  */
 @Configuration
+// 此注解才是主要的  EnableKafka
 @ConditionalOnClass(EnableKafka.class)
 class KafkaAnnotationDrivenConfiguration {
 
@@ -80,7 +81,7 @@ class KafkaAnnotationDrivenConfiguration {
 		configurer.setAfterRollbackProcessor(this.afterRollbackProcessor);
 		return configurer;
 	}
-
+	// ConcurrentKafkaListenerContainerFactory很重的类, 控制消费的并发度等功能
 	@Bean
 	@ConditionalOnMissingBean(name = "kafkaListenerContainerFactory")
 	public ConcurrentKafkaListenerContainerFactory<?, ?> kafkaListenerContainerFactory(
@@ -91,7 +92,10 @@ class KafkaAnnotationDrivenConfiguration {
 				.getIfAvailable(() -> new DefaultKafkaConsumerFactory<>(this.properties.buildConsumerProperties())));
 		return factory;
 	}
-
+	// EnableKafka使能kafka
+	// 此注解会向容器注入 kafka处理相关的   beanPostProcessor
+	// 这些beanPostProcessor 才真正实现了kafka的监听功能
+	// EnableKafka 注解中的javadoc 讲解的也很不错
 	@Configuration
 	@EnableKafka
 	@ConditionalOnMissingBean(name = KafkaListenerConfigUtils.KAFKA_LISTENER_ANNOTATION_PROCESSOR_BEAN_NAME)

@@ -50,8 +50,11 @@ import org.springframework.kafka.transaction.KafkaTransactionManager;
  * @since 1.5.0
  */
 @Configuration
+// template模板方法,可以发送数据
 @ConditionalOnClass(KafkaTemplate.class)
+// 配置类
 @EnableConfigurationProperties(KafkaProperties.class)
+// 加入两个配置类到容器中
 @Import({ KafkaAnnotationDrivenConfiguration.class, KafkaStreamsAnnotationDrivenConfiguration.class })
 public class KafkaAutoConfiguration {
 
@@ -63,7 +66,7 @@ public class KafkaAutoConfiguration {
 		this.properties = properties;
 		this.messageConverter = messageConverter.getIfUnique();
 	}
-
+	// 没有就创建一个
 	@Bean
 	@ConditionalOnMissingBean(KafkaTemplate.class)
 	public KafkaTemplate<?, ?> kafkaTemplate(ProducerFactory<Object, Object> kafkaProducerFactory,
@@ -76,19 +79,19 @@ public class KafkaAutoConfiguration {
 		kafkaTemplate.setDefaultTopic(this.properties.getTemplate().getDefaultTopic());
 		return kafkaTemplate;
 	}
-
+	// 创建一个ProducerListener
 	@Bean
 	@ConditionalOnMissingBean(ProducerListener.class)
 	public ProducerListener<Object, Object> kafkaProducerListener() {
 		return new LoggingProducerListener<>();
 	}
-
+	// consumer工厂类,创建KafkaConsumer
 	@Bean
 	@ConditionalOnMissingBean(ConsumerFactory.class)
 	public ConsumerFactory<?, ?> kafkaConsumerFactory() {
 		return new DefaultKafkaConsumerFactory<>(this.properties.buildConsumerProperties());
 	}
-
+	// producer工厂类,创建KafkaProducer
 	@Bean
 	@ConditionalOnMissingBean(ProducerFactory.class)
 	public ProducerFactory<?, ?> kafkaProducerFactory() {
