@@ -99,6 +99,7 @@ public class AutoConfigurationImportSelector implements DeferredImportSelector, 
 		// 具体是EnableAutoConfiguration对应的那些全部类
 		AutoConfigurationEntry autoConfigurationEntry = getAutoConfigurationEntry(autoConfigurationMetadata,
 				annotationMetadata);
+		// 把要注入的类名,转换为  数组
 		return StringUtils.toStringArray(autoConfigurationEntry.getConfigurations());
 	}
 
@@ -114,8 +115,10 @@ public class AutoConfigurationImportSelector implements DeferredImportSelector, 
 		if (!isEnabled(annotationMetadata)) {
 			return EMPTY_ENTRY;
 		}
+		// 获取注解的属性
 		AnnotationAttributes attributes = getAttributes(annotationMetadata);
-		// 从META-INF/spring.factories中加载EnableAutoConfiguration此key对应的配置类到容器中
+		// 从META-INF/spring.factories中加载EnableAutoConfiguration此key对应的配置类
+		// 获取候选的配置类
 		List<String> configurations = getCandidateConfigurations(annotationMetadata, attributes);
 		// 去重
 		configurations = removeDuplicates(configurations);
@@ -124,9 +127,11 @@ public class AutoConfigurationImportSelector implements DeferredImportSelector, 
 		// 利用exclusion条件, 去除满足exclusion的配置
 		checkExcludedClasses(configurations, exclusions);
 		configurations.removeAll(exclusions);
-		//
+		//  从spring.factories中加载AutoConfigurationImportFilter过滤器,并对要加载的配置类进行过滤
 		configurations = filter(configurations, autoConfigurationMetadata);
+		// 从spring.factories中获取AutoConfigurationImportListener, 并通知其AutoConfigurationImportEvent 事件
 		fireAutoConfigurationImportEvents(configurations, exclusions);
+		// 包装一下合适的配置, 以及 exclude的配置类
 		return new AutoConfigurationEntry(configurations, exclusions);
 	}
 
@@ -246,28 +251,41 @@ public class AutoConfigurationImportSelector implements DeferredImportSelector, 
 		String[] excludes = getEnvironment().getProperty(PROPERTY_NAME_AUTOCONFIGURE_EXCLUDE, String[].class);
 		return (excludes != null) ? Arrays.asList(excludes) : Collections.emptyList();
 	}
-
+	// 从spring.factories中加载AutoConfigurationImportFilter过滤器,进行过滤
 	private List<String> filter(List<String> configurations, AutoConfigurationMetadata autoConfigurationMetadata) {
 		long startTime = System.nanoTime();
+		// 保存候选配置类
 		String[] candidates = StringUtils.toStringArray(configurations);
+		// 保存candidates对应位置上 配置类是否过滤
 		boolean[] skip = new boolean[candidates.length];
 		boolean skipped = false;
+		// 从spring.factories 加载AutoConfigurationImportFilter对应的过滤器
+		// 依次调用过滤器对候选的 配置类进行 过滤
 		for (AutoConfigurationImportFilter filter : getAutoConfigurationImportFilters()) {
+			// 对filter通过 aware接口,注入对应的属性值
 			invokeAwareMethods(filter);
+			// 过滤操作
 			boolean[] match = filter.match(candidates, autoConfigurationMetadata);
 			for (int i = 0; i < match.length; i++) {
 				if (!match[i]) {
+					// candidates 对应位置的配置类 过滤掉
 					skip[i] = true;
+					// 释放掉 配置类
 					candidates[i] = null;
+					// 表示有 过滤
 					skipped = true;
 				}
 			}
 		}
+		// 如果没有过滤,则直接返回
 		if (!skipped) {
 			return configurations;
 		}
+		// 创建一个容器,来记录 最终合适的配置类
 		List<String> result = new ArrayList<>(candidates.length);
+		// 遍历所有的配置列
 		for (int i = 0; i < candidates.length; i++) {
+			// 如果对应的位置为false,表示没有过滤,则记录起来
 			if (!skip[i]) {
 				result.add(candidates[i]);
 			}
@@ -292,13 +310,18 @@ public class AutoConfigurationImportSelector implements DeferredImportSelector, 
 		String[] value = attributes.getStringArray(name);
 		return Arrays.asList((value != null) ? value : new String[0]);
 	}
-
+	// 从spring.factories中获取AutoConfigurationImportListener, 并通知其AutoConfigurationImportEvent 事件
 	private void fireAutoConfigurationImportEvents(List<String> configurations, Set<String> exclusions) {
+		// 从spring.factories中获取AutoConfigurationImportListener,
 		List<AutoConfigurationImportListener> listeners = getAutoConfigurationImportListeners();
+		// 如果存在listener呢,则会发送事件
 		if (!listeners.isEmpty()) {
+			// 创建事件
 			AutoConfigurationImportEvent event = new AutoConfigurationImportEvent(this, configurations, exclusions);
 			for (AutoConfigurationImportListener listener : listeners) {
+				// 回调各种 Aware接口,来注入相应的field
 				invokeAwareMethods(listener);
+				// 调用监听器,对事件进行处理
 				listener.onAutoConfigurationImportEvent(event);
 			}
 		}
