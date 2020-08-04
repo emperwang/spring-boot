@@ -368,7 +368,11 @@ public class SpringApplication {
 		// Create and configure the environment
 		// 获取环境变量,没有则根据项目类型 进行创建
 		ConfigurableEnvironment environment = getOrCreateEnvironment();
+		// 对environment进行配置
+		// 1. 添加默认属性到 environment
+		// 2. 解析命令行参数 并添加到 environment
 		configureEnvironment(environment, applicationArguments.getSourceArgs());
+		//
 		ConfigurationPropertySources.attach(environment);
 		// 发布 ApplicationEnvironmentPreparedEvent 事件
 		listeners.environmentPrepared(environment);
@@ -401,6 +405,7 @@ public class SpringApplication {
 		// 3. addConversionService
 		postProcessApplicationContext(context);
 		// 调用从 spring.factories中加载的初始化,进行初始化一些操作
+		// 执行 ApplicationContextInitializer.initialize
 		applyInitializers(context);
 		// 发布ApplicationContextInitializedEvent事件
 		listeners.contextPrepared(context);
@@ -415,13 +420,18 @@ public class SpringApplication {
 		if (printedBanner != null) {
 			beanFactory.registerSingleton("springBootBanner", printedBanner);
 		}
+		// 设置是否运行 beanDefinition的override
 		if (beanFactory instanceof DefaultListableBeanFactory) {
 			((DefaultListableBeanFactory) beanFactory)
 					.setAllowBeanDefinitionOverriding(this.allowBeanDefinitionOverriding);
 		}
 		// Load the sources
+		// 获取SpringApplication.run 参数注册的 class
 		Set<Object> sources = getAllSources();
 		Assert.notEmpty(sources, "Sources must not be empty");
+		// 接在bean到 容器中
+		// 此处加载的bean,就有启动类
+		// 此时 真正的启动到 就注册到 容器中了
 		load(context, sources.toArray(new Object[0]));
 		// 发布 ApplicationPreparedEvent 事件
 		listeners.contextLoaded(context);
@@ -451,11 +461,11 @@ public class SpringApplication {
 		return new SpringApplicationRunListeners(logger,
 				getSpringFactoriesInstances(SpringApplicationRunListener.class, types, this, args));
 	}
-
+	// 从spring.factories 中获取实例
 	private <T> Collection<T> getSpringFactoriesInstances(Class<T> type) {
 		return getSpringFactoriesInstances(type, new Class<?>[] {});
 	}
-
+	// 从spring.factories 中获取实例
 	private <T> Collection<T> getSpringFactoriesInstances(Class<T> type, Class<?>[] parameterTypes, Object... args) {
 		ClassLoader classLoader = getClassLoader();
 		// Use names and ensure unique to protect against duplicates
@@ -520,7 +530,10 @@ public class SpringApplication {
 			ConversionService conversionService = ApplicationConversionService.getSharedInstance();
 			environment.setConversionService((ConfigurableConversionService) conversionService);
 		}
+		//1. 如果有默认属性,则添加属性到 environment
+		//2. 解析命令行参数,并把命令行参数添加environment
 		configurePropertySources(environment, args);
+		// 1.设置profile
 		configureProfiles(environment, args);
 	}
 
@@ -531,17 +544,21 @@ public class SpringApplication {
 	 * @param args arguments passed to the {@code run} method
 	 * @see #configureEnvironment(ConfigurableEnvironment, String[])
 	 */
+	// 添加property到 environment
 	protected void configurePropertySources(ConfigurableEnvironment environment, String[] args) {
 		MutablePropertySources sources = environment.getPropertySources();
+		// 如果有defaultProperties,则把默认属性添加到 environment
 		if (this.defaultProperties != null && !this.defaultProperties.isEmpty()) {
 			sources.addLast(new MapPropertySource("defaultProperties", this.defaultProperties));
 		}
+		// 如果存在命令行属性(即命令行传递的参数),则把命令行属性添加到environment-->commandLineArgs
 		if (this.addCommandLineProperties && args.length > 0) {
 			String name = CommandLinePropertySource.COMMAND_LINE_PROPERTY_SOURCE_NAME;
 			if (sources.contains(name)) {
 				PropertySource<?> source = sources.get(name);
 				CompositePropertySource composite = new CompositePropertySource(name);
 				composite.addPropertySource(
+						// SimpleCommandLinePropertySource 会对命令行参数进行解析的操作
 						new SimpleCommandLinePropertySource("springApplicationCommandLineArgs", args));
 				composite.addPropertySource(source);
 				sources.replace(name, composite);
@@ -611,6 +628,7 @@ public class SpringApplication {
 	 * @return the application context (not yet refreshed)
 	 * @see #setApplicationContextClass(Class)
 	 */
+	// 创建ApplicationContext
 	protected ConfigurableApplicationContext createApplicationContext() {
 		Class<?> contextClass = this.applicationContextClass;
 		if (contextClass == null) {
@@ -672,6 +690,7 @@ public class SpringApplication {
 			Class<?> requiredType = GenericTypeResolver.resolveTypeArgument(initializer.getClass(),
 					ApplicationContextInitializer.class);
 			Assert.isInstanceOf(requiredType, context, "Unable to call initializer.");
+			// 执行 ApplicationContextInitializer的initialize方法
 			initializer.initialize(context);
 		}
 	}
@@ -727,16 +746,22 @@ public class SpringApplication {
 		if (logger.isDebugEnabled()) {
 			logger.debug("Loading source " + StringUtils.arrayToCommaDelimitedString(sources));
 		}
+		// 创建了扫描器
+		// AnnotatedBeanDefinitionReader  XmlBeanDefinitionReader  ClassPathBeanDefinitionScanner
 		BeanDefinitionLoader loader = createBeanDefinitionLoader(getBeanDefinitionRegistry(context), sources);
+		// 如果有 名称生成器  设置名称生成器
 		if (this.beanNameGenerator != null) {
 			loader.setBeanNameGenerator(this.beanNameGenerator);
 		}
+		// 资源加载器
 		if (this.resourceLoader != null) {
 			loader.setResourceLoader(this.resourceLoader);
 		}
+		// 设置 environment
 		if (this.environment != null) {
 			loader.setEnvironment(this.environment);
 		}
+		// 具体的加载动作
 		loader.load();
 	}
 
@@ -767,6 +792,7 @@ public class SpringApplication {
 	 * @param context the application context
 	 * @return the BeanDefinitionRegistry if it can be determined
 	 */
+	// 获取  beanDefinition registry
 	private BeanDefinitionRegistry getBeanDefinitionRegistry(ApplicationContext context) {
 		if (context instanceof BeanDefinitionRegistry) {
 			return (BeanDefinitionRegistry) context;
@@ -791,6 +817,7 @@ public class SpringApplication {
 	 * Refresh the underlying {@link ApplicationContext}.
 	 * @param applicationContext the application context to refresh
 	 */
+	// 刷新context的操作
 	protected void refresh(ApplicationContext applicationContext) {
 		Assert.isInstanceOf(AbstractApplicationContext.class, applicationContext);
 		((AbstractApplicationContext) applicationContext).refresh();
@@ -1166,6 +1193,7 @@ public class SpringApplication {
 	public Set<Object> getAllSources() {
 		Set<Object> allSources = new LinkedHashSet<>();
 		if (!CollectionUtils.isEmpty(this.primarySources)) {
+			// 此primarySources 是SpringApplication.run 参数注册的
 			allSources.addAll(this.primarySources);
 		}
 		if (!CollectionUtils.isEmpty(this.sources)) {

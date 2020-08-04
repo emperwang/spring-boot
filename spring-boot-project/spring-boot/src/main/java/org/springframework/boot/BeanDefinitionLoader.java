@@ -78,12 +78,16 @@ class BeanDefinitionLoader {
 		Assert.notNull(registry, "Registry must not be null");
 		Assert.notEmpty(sources, "Sources must not be empty");
 		this.sources = sources;
+		// 注册扫描器
 		this.annotatedReader = new AnnotatedBeanDefinitionReader(registry);
+		// xml 文件扫描器
 		this.xmlReader = new XmlBeanDefinitionReader(registry);
 		if (isGroovyPresent()) {
 			this.groovyReader = new GroovyBeanDefinitionReader(registry);
 		}
+		// classPath 扫描器
 		this.scanner = new ClassPathBeanDefinitionScanner(registry);
+		// 设置过滤器
 		this.scanner.addExcludeFilter(new ClassExcludeFilter(sources));
 	}
 
@@ -121,38 +125,47 @@ class BeanDefinitionLoader {
 	 * Load the sources into the reader.
 	 * @return the number of loaded beans
 	 */
+	// 记载资源到 容器中,资源可以是bean
 	public int load() {
 		int count = 0;
 		for (Object source : this.sources) {
+			// 循环遍历,加载sources中的全部
 			count += load(source);
 		}
 		return count;
 	}
-
+	// 根据不同类型来进行加载
 	private int load(Object source) {
 		Assert.notNull(source, "Source must not be null");
+		// 如果是 class类型的加载
 		if (source instanceof Class<?>) {
 			return load((Class<?>) source);
 		}
+		// resource 类型的加载
 		if (source instanceof Resource) {
 			return load((Resource) source);
 		}
+		// packag类型的加载
 		if (source instanceof Package) {
+			// classPath 类型的加载
 			return load((Package) source);
 		}
+		// 字符串类型加载
 		if (source instanceof CharSequence) {
 			return load((CharSequence) source);
 		}
 		throw new IllegalArgumentException("Invalid source type " + source.getClass());
 	}
-
+	// class 类型的加载
 	private int load(Class<?> source) {
 		if (isGroovyPresent() && GroovyBeanDefinitionSource.class.isAssignableFrom(source)) {
 			// Any GroovyLoaders added in beans{} DSL can contribute beans here
 			GroovyBeanDefinitionSource loader = BeanUtils.instantiateClass(source, GroovyBeanDefinitionSource.class);
 			load(loader);
 		}
+		// 判断是否是 component,即是否有@Component 注解
 		if (isComponent(source)) {
+			// 如果有,则使用注解扫描器进行读取
 			this.annotatedReader.register(source);
 			return 1;
 		}
@@ -271,10 +284,11 @@ class BeanDefinitionLoader {
 		}
 		return Package.getPackage(source.toString());
 	}
-
+	// 判断是否是  component的方法
 	private boolean isComponent(Class<?> type) {
 		// This has to be a bit of a guess. The only way to be sure that this type is
 		// eligible is to make a bean definition out of it and try to instantiate it.
+		// 有注册 Comonent 则表示就是 component
 		if (AnnotationUtils.findAnnotation(type, Component.class) != null) {
 			return true;
 		}
