@@ -91,9 +91,9 @@ public class TomcatWebServer implements WebServer {
 		logger.info("Tomcat initialized with port(s): " + getPortsDescription(false));
 		synchronized (this.monitor) {
 			try {
-				// 添加engine
+				// 配置engine的name
 				addInstanceIdToEngineName();
-				// 查找context
+				// 查找standardContext
 				Context context = findContext();
 				context.addLifecycleListener((event) -> {
 					if (context.equals(event.getSource()) && Lifecycle.START_EVENT.equals(event.getType())) {

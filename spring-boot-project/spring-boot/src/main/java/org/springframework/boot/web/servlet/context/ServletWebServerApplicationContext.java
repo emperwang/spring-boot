@@ -172,7 +172,7 @@ public class ServletWebServerApplicationContext extends GenericWebApplicationCon
 		super.onClose();
 		stopAndReleaseWebServer();
 	}
-
+	// 创建webServer
 	private void createWebServer() {
 		WebServer webServer = this.webServer;
 		// 获取seveltContext
@@ -184,6 +184,8 @@ public class ServletWebServerApplicationContext extends GenericWebApplicationCon
 			// getSelfInitializer() 获取容器中的ServletContextInitializer并调用其onStartUp方法,此操作会把servelt
 			// filter listener 注册到context中
 			// todo * * * * 重要
+			// getSelfInitializer() 此函数在此处只是返回一个函数
+			// getWebServer 函数比较特殊,此处参数接收到了一个 函数
 			this.webServer = factory.getWebServer(getSelfInitializer());
 		}
 		else if (servletContext != null) {
@@ -227,12 +229,18 @@ public class ServletWebServerApplicationContext extends GenericWebApplicationCon
 	 * @return the self initializer
 	 * @see #prepareWebApplicationContext(ServletContext)
 	 */
+	// 注意此处哦,此处返回一个函数,后面会调用函数来进行 进一步的初始化
 	private org.springframework.boot.web.servlet.ServletContextInitializer getSelfInitializer() {
 		return this::selfInitialize;
 	}
-
+	// 这只是向tomcat中添加一个 ServletContextInitializer, 在context的start中执行
 	private void selfInitialize(ServletContext servletContext) throws ServletException {
+		// 1. 先尝试从servletContext中获取rootContext(即根容器),如果存在则报错
+		// 2. 把当前的 applicationContext注册到  ServletContext
+		// 3. 记录当前的servletContext
 		prepareWebApplicationContext(servletContext);
+		// 1. 注册 servlerScope 到容器中
+		// 2  添加此scope到servletContext中
 		registerApplicationScope(servletContext);
 		WebApplicationContextUtils.registerEnvironmentBeans(getBeanFactory(), servletContext);
 		// 获取容器中ServletContextInitializer
@@ -278,7 +286,7 @@ public class ServletWebServerApplicationContext extends GenericWebApplicationCon
 	 * @param servletContext the operational servlet context
 	 */
 	protected void prepareWebApplicationContext(ServletContext servletContext) {
-		// 获取根容器
+		// 从servletContext中尝试获取根容器
 		Object rootContext = servletContext.getAttribute(WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE);
 		if (rootContext != null) {
 			if (rootContext == this) {
@@ -291,11 +299,13 @@ public class ServletWebServerApplicationContext extends GenericWebApplicationCon
 		Log logger = LogFactory.getLog(ContextLoader.class);
 		servletContext.log("Initializing Spring embedded WebApplicationContext");
 		try {
+			// 把applicationContext记录到  serveltContext中
 			servletContext.setAttribute(WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE, this);
 			if (logger.isDebugEnabled()) {
 				logger.debug("Published root WebApplicationContext as ServletContext attribute with name ["
 						+ WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE + "]");
 			}
+			// 记录servletContext
 			setServletContext(servletContext);
 			if (logger.isInfoEnabled()) {
 				long elapsedTime = System.currentTimeMillis() - getStartupDate();

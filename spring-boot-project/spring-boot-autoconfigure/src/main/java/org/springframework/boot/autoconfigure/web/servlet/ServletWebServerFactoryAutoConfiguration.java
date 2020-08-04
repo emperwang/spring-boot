@@ -63,6 +63,9 @@ import org.springframework.util.ObjectUtils;
  * 1. BeanPostProcessorsRegistrar为一个后置处理器
  * 2. EmbeddedTomcat  一个创建tomcat容器的工厂类
  * 3. EmbeddedJetty
+ * BeanPostProcessorsRegistrar 后置处理器向容器注入bean WebServerFactoryCustomizerBeanPostProcessor 和
+ * ErrorPageRegistrarBeanPostProcessor。其中WebServerFactoryCustomizerBeanPostProcessor 主要的工作就是调用customer对servlet容器
+ * 进行定制化
  */
 @Import({ ServletWebServerFactoryAutoConfiguration.BeanPostProcessorsRegistrar.class,
 		ServletWebServerFactoryConfiguration.EmbeddedTomcat.class,
@@ -96,15 +99,19 @@ public class ServletWebServerFactoryAutoConfiguration {
 				this.beanFactory = (ConfigurableListableBeanFactory) beanFactory;
 			}
 		}
-
+		//
 		@Override
 		public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata,
 				BeanDefinitionRegistry registry) {
 			if (this.beanFactory == null) {
 				return;
 			}
+			// 向容器中注入 WebServerFactoryCustomizerBeanPostProcessor 后置处理器,用于调用各种customer对servlet容器进行
+			// 定制
 			registerSyntheticBeanIfMissing(registry, "webServerFactoryCustomizerBeanPostProcessor",
 					WebServerFactoryCustomizerBeanPostProcessor.class);
+			// ErrorPageRegistrarBeanPostProcessor 用于注册 errorpage
+			// 有待再分析
 			registerSyntheticBeanIfMissing(registry, "errorPageRegistrarBeanPostProcessor",
 					ErrorPageRegistrarBeanPostProcessor.class);
 		}
@@ -112,7 +119,9 @@ public class ServletWebServerFactoryAutoConfiguration {
 		private void registerSyntheticBeanIfMissing(BeanDefinitionRegistry registry, String name, Class<?> beanClass) {
 			if (ObjectUtils.isEmpty(this.beanFactory.getBeanNamesForType(beanClass, true, false))) {
 				RootBeanDefinition beanDefinition = new RootBeanDefinition(beanClass);
+				// 记录此 bean是Synthetic(合成的)
 				beanDefinition.setSynthetic(true);
+				// 注册beanDefinition到容器
 				registry.registerBeanDefinition(name, beanDefinition);
 			}
 		}

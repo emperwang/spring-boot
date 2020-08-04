@@ -68,7 +68,7 @@ public abstract class AbstractServletWebServerFactory extends AbstractConfigurab
 	private boolean registerDefaultServlet = true;
 
 	private MimeMappings mimeMappings = new MimeMappings(MimeMappings.DEFAULT);
-
+	// 存储ServletContextInitializer类型 bean
 	private List<ServletContextInitializer> initializers = new ArrayList<>();
 
 	private Jsp jsp = new Jsp();

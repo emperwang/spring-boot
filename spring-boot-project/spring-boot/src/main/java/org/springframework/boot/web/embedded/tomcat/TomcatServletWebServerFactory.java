@@ -108,17 +108,17 @@ public class TomcatServletWebServerFactory extends AbstractServletWebServerFacto
 	public static final String DEFAULT_PROTOCOL = "org.apache.coyote.http11.Http11NioProtocol";
 
 	private File baseDirectory;
-
+	// tomcat engine中 pipeline 的 处理器
 	private List<Valve> engineValves = new ArrayList<>();
-
+	// 此存储 tomcat中 context的 pipeline中的 处理器
 	private List<Valve> contextValves = new ArrayList<>();
 
 	private List<LifecycleListener> contextLifecycleListeners = getDefaultLifecycleListeners();
-
+	// 对 tomcat context 进行定制化的操作
 	private List<TomcatContextCustomizer> tomcatContextCustomizers = new ArrayList<>();
-
+	// 对tomoat connector 进行定制化的类
 	private List<TomcatConnectorCustomizer> tomcatConnectorCustomizers = new ArrayList<>();
-
+	// 另外添加的 connector
 	private List<Connector> additionalTomcatConnectors = new ArrayList<>();
 
 	private ResourceLoader resourceLoader;
@@ -128,7 +128,7 @@ public class TomcatServletWebServerFactory extends AbstractServletWebServerFacto
 	private Set<String> tldSkipPatterns = new LinkedHashSet<>(TldSkipPatterns.DEFAULT);
 
 	private Charset uriEncoding = DEFAULT_CHARSET;
-
+	// 对应 tomcat 后台线程的 延迟时间
 	private int backgroundProcessorDelay;
 
 	/**
@@ -165,38 +165,48 @@ public class TomcatServletWebServerFactory extends AbstractServletWebServerFacto
 	/**
 	 * todo 真正创建 tomcat的地方
 	 *  创建servlet容器
+	 *  此函数 被调用时,参数给定的是一个 函数
 	 */
 	@Override
 	public WebServer getWebServer(ServletContextInitializer... initializers) {
+		// 1. 创建 Tomcat
 		Tomcat tomcat = new Tomcat();
+		// 2. 创建baseDir, 默认是 tomcat
 		File baseDir = (this.baseDirectory != null) ? this.baseDirectory : createTempDir("tomcat");
+		// 3. 记录baseDir
 		tomcat.setBaseDir(baseDir.getAbsolutePath());
-		// 连接器
+		// 4. 创建连接器
 		Connector connector = new Connector(this.protocol);
+		// 添加连接器到 service
 		tomcat.getService().addConnector(connector);
-		// 对连接器的一些配置,如端口, urlencode, 是否开始ssl
+		// 5. 对连接器的一些配置,如端口, urlencode, 是否开始ssl
 		customizeConnector(connector);
+		// 6. 记录 connector
 		tomcat.setConnector(connector);
 		tomcat.getHost().setAutoDeploy(false);
+		// 7. 配置 engine
 		configureEngine(tomcat.getEngine());
+		// 8. 添加额外的  connector 到tomcat 容器中
 		for (Connector additionalConnector : this.additionalTomcatConnectors) {
 			tomcat.getService().addConnector(additionalConnector);
 		}
-		// 对context进行了很多的 custom操作
+		// 9. 对context进行了很多的 custom操作
 		prepareContext(tomcat.getHost(), initializers);
-		// 根据创建的tomcat进行启动操作
+		// 10. 根据创建的tomcat进行启动操作
 		return getTomcatWebServer(tomcat);
 	}
 
 	private void configureEngine(Engine engine) {
 		engine.setBackgroundProcessorDelay(this.backgroundProcessorDelay);
+		// 添加 engineValue到 engine的pipeline中
 		for (Valve valve : this.engineValves) {
 			engine.getPipeline().addValve(valve);
 		}
 	}
-
+	// 对tomcat standardContext的配置
 	protected void prepareContext(Host host, ServletContextInitializer[] initializers) {
 		File documentRoot = getValidDocumentRoot();
+		// 创建TomcatEmbeddedContext ,此时standardContext的子类,主要就是 代表此应用了
 		TomcatEmbeddedContext context = new TomcatEmbeddedContext();
 		if (documentRoot != null) {
 			context.setResources(new LoaderHidingResourceRoot(context));
@@ -204,7 +214,9 @@ public class TomcatServletWebServerFactory extends AbstractServletWebServerFacto
 		// 设置context的name 以及context的path
 		context.setName(getContextPath());
 		context.setDisplayName(getDisplayName());
+		// 配置context的映射路径
 		context.setPath(getContextPath());
+		// 配置  tomcat docbase
 		File docBase = (documentRoot != null) ? documentRoot : createTempDir("tomcat-docbase");
 		context.setDocBase(docBase.getAbsolutePath());
 		// 添加一个监听器, 此监听器功能很多..
@@ -222,11 +234,14 @@ public class TomcatServletWebServerFactory extends AbstractServletWebServerFacto
 		catch (NoSuchMethodError ex) {
 			// Tomcat is < 8.5.39. Continue.
 		}
+		// 配置扫描jar时的过滤规则
 		configureTldSkipPatterns(context);
 		WebappLoader loader = new WebappLoader(context.getParentClassLoader());
+		// 设置类加载器
 		loader.setLoaderClass(TomcatEmbeddedWebappClassLoader.class.getName());
 		loader.setDelegate(true);
 		context.setLoader(loader);
+		// 记录一个defaultServlet到容器中
 		if (isRegisterDefaultServlet()) {
 			addDefaultServlet(context);
 		}
@@ -235,8 +250,11 @@ public class TomcatServletWebServerFactory extends AbstractServletWebServerFacto
 			addJspServlet(context);
 			addJasperInitializer(context);
 		}
+		// 静态资源的配置
 		context.addLifecycleListener(new StaticResourceConfigurer(context));
+		// 合并这些 ServletContextInitializer
 		ServletContextInitializer[] initializersToUse = mergeInitializers(initializers);
+		// 把此 context 添加到host中
 		host.addChild(context);
 		// 1. 注册ServletContextInitializer到tomcat中
 		// 2. 注册监听器
@@ -352,48 +370,58 @@ public class TomcatServletWebServerFactory extends AbstractServletWebServerFacto
 		TomcatStarter starter = new TomcatStarter(initializers);
 		if (context instanceof TomcatEmbeddedContext) {
 			TomcatEmbeddedContext embeddedContext = (TomcatEmbeddedContext) context;
+			// 可见此 starter封装了那些 ServletContextInitializer
 			embeddedContext.setStarter(starter);
 			embeddedContext.setFailCtxIfServletStartFails(true);
 		}
+		// 记录 ServletContextInitializer 到tomcat的 standardContext中
 		context.addServletContainerInitializer(starter, NO_CLASSES);
 		// 添加监听器到  context
 		for (LifecycleListener lifecycleListener : this.contextLifecycleListeners) {
 			context.addLifecycleListener(lifecycleListener);
 		}
+		// 添加 contextValue 到  context的 pipeline中
 		for (Valve valve : this.contextValves) {
 			context.getPipeline().addValve(valve);
 		}
+		// errorpage 的设置
 		for (ErrorPage errorPage : getErrorPages()) {
 			new TomcatErrorPage(errorPage).addToContext(context);
 		}
 		for (MimeMappings.Mapping mapping : getMimeMappings()) {
 			context.addMimeMapping(mapping.getExtension(), mapping.getMimeType());
 		}
-		// 配置session
+		// 1. 配置session 的超时时间
+		// 2. 如果设置了session的超时时间,则配置一下超时时间
 		configureSession(context);
+		// 进行一些配置
 		new DisableReferenceClearingContextCustomizer().customize(context);
 		// 使用注册的 TomcatContextCustomizer 对context再次进行 custom 操作
 		for (TomcatContextCustomizer customizer : this.tomcatContextCustomizers) {
 			customizer.customize(context);
 		}
 	}
-
+	// 配置session
 	private void configureSession(Context context) {
+		// 配置session的过期时间
 		long sessionTimeout = getSessionTimeoutInMinutes();
 		context.setSessionTimeout((int) sessionTimeout);
 		Boolean httpOnly = getSession().getCookie().getHttpOnly();
 		if (httpOnly != null) {
 			context.setUseHttpOnly(httpOnly);
 		}
+		// 如果设置了 session的持久化,则进行相应的配置
 		if (getSession().isPersistent()) {
 			Manager manager = context.getManager();
 			if (manager == null) {
 				manager = new StandardManager();
 				context.setManager(manager);
 			}
+			// 配置session的持久化
 			configurePersistSession(manager);
 		}
 		else {
+			// 如果没有设置相应的持久化,则添加一个监听器到容器中
 			context.addLifecycleListener(new DisablePersistSessionListener());
 		}
 	}
