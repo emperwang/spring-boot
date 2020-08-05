@@ -106,12 +106,14 @@ public abstract class DynamicRegistrationBean<D extends Registration.Dynamic> ex
 	@Override
 	protected final void register(String description, ServletContext servletContext) {
 		// 真是的注册操作
+		// 返回动态注册的servlet的包装类 ServletRegistration.Dynamic
 		D registration = addRegistration(description, servletContext);
 		if (registration == null) {
 			logger.info(
 					StringUtils.capitalize(description) + " was not registered " + "(possibly already registered?)");
 			return;
 		}
+		// 对动态注册的servlet 进行配置
 		configure(registration);
 	}
 
@@ -132,6 +134,9 @@ public abstract class DynamicRegistrationBean<D extends Registration.Dynamic> ex
 	 * @param value the object used for convention based names
 	 * @return the deduced name
 	 */
+	// 如果设置了名字,则使用设置的名字
+	// 否则使用serlvet 全限定类的最后
+	// com.myapp.UKProduct becomes  "UKProduct"
 	protected final String getOrDeduceName(Object value) {
 		return (this.name != null) ? this.name : Conventions.getVariableName(value);
 	}

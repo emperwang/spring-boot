@@ -47,6 +47,10 @@ import org.springframework.core.annotation.AliasFor;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
+// 熟悉不,springboot的经典手段
+// 注入一个bean到容器中中
+// 一般此注入到容器中的bean, 会进一步注入一些后置处理器到容器(当前也有配置类),此注入的处理器会
+// 处理对应的这些要实现的功能
 @Import(ServletComponentScanRegistrar.class)
 public @interface ServletComponentScan {
 

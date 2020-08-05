@@ -42,7 +42,9 @@ public abstract class RegistrationBean implements ServletContextInitializer, Ord
 	private int order = Ordered.LOWEST_PRECEDENCE;
 
 	private boolean enabled = true;
-
+	// 重载ServletContextInitializer的函数
+	// 此操作会在 tomcat启动,也就是 standardContext 进行启动的时候,进行调用
+	// servletContext 就是tomcat中的应用上下文, 也是在standardContext中创建的
 	@Override
 	public final void onStartup(ServletContext servletContext) throws ServletException {
 		String description = getDescription();

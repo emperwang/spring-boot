@@ -179,8 +179,10 @@ public class ServletRegistrationBean<T extends Servlet> extends DynamicRegistrat
 	 */
 	@Override
 	protected ServletRegistration.Dynamic addRegistration(String description, ServletContext servletContext) {
+		// 获取此servlet的name
 		String name = getServletName();
-		// 把servelt添加到context中
+		// 把servelt添加到tomcat的 standardContext中
+		// 返回动态注册的servlet的包装类 ServletRegistration.Dynamic
 		return servletContext.addServlet(name, this.servlet);
 	}
 
@@ -209,6 +211,9 @@ public class ServletRegistrationBean<T extends Servlet> extends DynamicRegistrat
 	 * Returns the servlet name that will be registered.
 	 * @return the servlet name
 	 */
+	// 如果设置了名字,则使用设置的名字
+	// 否则使用serlvet 全限定类的最后
+	// com.myapp.UKProduct becomes  "UKProduct"
 	public String getServletName() {
 		return getOrDeduceName(this.servlet);
 	}

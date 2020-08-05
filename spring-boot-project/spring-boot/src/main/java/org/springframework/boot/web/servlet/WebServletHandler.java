@@ -38,19 +38,24 @@ class WebServletHandler extends ServletComponentHandler {
 	WebServletHandler() {
 		super(WebServlet.class);
 	}
-
+	// 对 WebServlet 注解bean的处理
 	@Override
 	public void doHandle(Map<String, Object> attributes, AnnotatedBeanDefinition beanDefinition,
 			BeanDefinitionRegistry registry) {
+		// 创建一个 ServletRegistrationBean 的beanDefinitionBuilder
 		BeanDefinitionBuilder builder = BeanDefinitionBuilder.rootBeanDefinition(ServletRegistrationBean.class);
+		// 添加了各种 property value
 		builder.addPropertyValue("asyncSupported", attributes.get("asyncSupported"));
 		builder.addPropertyValue("initParameters", extractInitParameters(attributes));
 		builder.addPropertyValue("loadOnStartup", attributes.get("loadOnStartup"));
 		String name = determineName(attributes, beanDefinition);
 		builder.addPropertyValue("name", name);
+		// 此servlet 属性记录了 具体的servlet对应的 beanDefinition
 		builder.addPropertyValue("servlet", beanDefinition);
 		builder.addPropertyValue("urlMappings", extractUrlPatterns(attributes));
 		builder.addPropertyValue("multipartConfig", determineMultipartConfig(beanDefinition));
+		// 注册此beanDefinition到容器
+		// 也就是说最终的 一个webServlet注解的bean,就会包装为一个 ServletRegistrationBean beanDefinition
 		registry.registerBeanDefinition(name, builder.getBeanDefinition());
 	}
 

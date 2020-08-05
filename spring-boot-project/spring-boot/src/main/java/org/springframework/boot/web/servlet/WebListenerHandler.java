@@ -38,8 +38,11 @@ class WebListenerHandler extends ServletComponentHandler {
 	@Override
 	protected void doHandle(Map<String, Object> attributes, AnnotatedBeanDefinition beanDefinition,
 			BeanDefinitionRegistry registry) {
+		// 创建一个ServletListenerRegistrationBean beanDefinition的builder
 		BeanDefinitionBuilder builder = BeanDefinitionBuilder.rootBeanDefinition(ServletListenerRegistrationBean.class);
+		// 记录 具体的listener的 beanDefinition
 		builder.addPropertyValue("listener", beanDefinition);
+		// 记录此ServletListenerRegistrationBean 的beanDefinition到容器中
 		registry.registerBeanDefinition(beanDefinition.getBeanClassName(), builder.getBeanDefinition());
 	}
 

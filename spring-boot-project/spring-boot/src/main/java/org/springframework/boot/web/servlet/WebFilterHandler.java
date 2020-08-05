@@ -39,19 +39,25 @@ class WebFilterHandler extends ServletComponentHandler {
 	WebFilterHandler() {
 		super(WebFilter.class);
 	}
-
+	// 对webFilter注解的bean的处理
 	@Override
 	public void doHandle(Map<String, Object> attributes, AnnotatedBeanDefinition beanDefinition,
 			BeanDefinitionRegistry registry) {
+		// 创建一个FilterRegistrationBean 的beanDefinition的builder
 		BeanDefinitionBuilder builder = BeanDefinitionBuilder.rootBeanDefinition(FilterRegistrationBean.class);
+		// 记录此 filter是否支持异步处理
 		builder.addPropertyValue("asyncSupported", attributes.get("asyncSupported"));
 		builder.addPropertyValue("dispatcherTypes", extractDispatcherTypes(attributes));
+		// 记录 filter对应的beanDefinition
 		builder.addPropertyValue("filter", beanDefinition);
+		// 此filter对应的初始化参数
 		builder.addPropertyValue("initParameters", extractInitParameters(attributes));
 		String name = determineName(attributes, beanDefinition);
 		builder.addPropertyValue("name", name);
 		builder.addPropertyValue("servletNames", attributes.get("servletNames"));
+		// 此filter对应的 urlpattern
 		builder.addPropertyValue("urlPatterns", extractUrlPatterns(attributes));
+		// 记录此 FilterRegistrationBean的beanDefinition到容器中
 		registry.registerBeanDefinition(name, builder.getBeanDefinition());
 	}
 
