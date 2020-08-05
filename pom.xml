@@ -14,6 +14,7 @@
 		<main.basedir>${basedir}</main.basedir>
 	</properties>
 	<!-- Most elements are in profiles so they are stripped out during maven-flatten -->
+	<!--打包的命令 mvn clean package -DskipTests -Ddisable.checks=true-->
 	<profiles>
 		<!-- Default profile for command line build -->
 		<profile>
