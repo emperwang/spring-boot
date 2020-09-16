@@ -1,0 +1,1 @@
+dubbosubscribe=com.alibaba.dubbo.spring.boot.listener.ConsumerSubscribeListener
