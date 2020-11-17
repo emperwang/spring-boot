@@ -77,8 +77,9 @@ public class ExplodedArchive implements Archive {
 		this.recursive = recursive;
 		this.manifestFile = getManifestFile(root);
 	}
-
+	// 获取 MANIFEST.MF 文件
 	private File getManifestFile(File root) {
+		// 此处即找到 META-INF目录下的 MANIFEST.MF 文件
 		File metaInf = new File(root, "META-INF");
 		return new File(metaInf, "MANIFEST.MF");
 	}
@@ -101,20 +102,23 @@ public class ExplodedArchive implements Archive {
 	@Override
 	public List<Archive> getNestedArchives(EntryFilter filter) throws IOException {
 		List<Archive> nestedArchives = new ArrayList<>();
+		// 之所以可以这样调用, 是因为实现了 Iterable 接口
 		for (Entry entry : this) {
+			// 如果是 BOOT-INF/lib/ 或者 BOOT-INF/classes
 			if (filter.matches(entry)) {
 				nestedArchives.add(getNestedArchive(entry));
 			}
 		}
 		return Collections.unmodifiableList(nestedArchives);
 	}
-
+	//
 	@Override
 	public Iterator<Entry> iterator() {
 		return new FileEntryIterator(this.root, this.recursive);
 	}
 
 	protected Archive getNestedArchive(Entry entry) throws IOException {
+		// 这里是获取 entry目录下的文件
 		File file = ((FileEntry) entry).getFile();
 		return (file.isDirectory() ? new ExplodedArchive(file) : new JarFileArchive(file));
 	}

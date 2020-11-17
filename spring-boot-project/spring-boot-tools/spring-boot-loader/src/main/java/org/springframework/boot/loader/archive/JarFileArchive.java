@@ -83,7 +83,9 @@ public class JarFileArchive implements Archive {
 	public List<Archive> getNestedArchives(EntryFilter filter) throws IOException {
 		List<Archive> nestedArchives = new ArrayList<>();
 		for (Entry entry : this) {
+			// 这是BOOT-INF/lib/  目录下jar包的处理
 			if (filter.matches(entry)) {
+				// 处理jar 或者 zip 文件
 				nestedArchives.add(getNestedArchive(entry));
 			}
 		}
@@ -96,6 +98,7 @@ public class JarFileArchive implements Archive {
 	}
 
 	protected Archive getNestedArchive(Entry entry) throws IOException {
+		//
 		JarEntry jarEntry = ((JarFileEntry) entry).getJarEntry();
 		if (jarEntry.getComment().startsWith(UNPACK_MARKER)) {
 			return getUnpackedNestedArchive(jarEntry);

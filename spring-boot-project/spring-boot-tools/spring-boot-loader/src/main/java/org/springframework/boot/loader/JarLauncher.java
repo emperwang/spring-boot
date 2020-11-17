@@ -28,9 +28,9 @@ import org.springframework.boot.loader.archive.Archive;
  * @since 1.0.0
  */
 public class JarLauncher extends ExecutableArchiveLauncher {
-
+	// 这是用户的业务代码
 	static final String BOOT_INF_CLASSES = "BOOT-INF/classes/";
-
+	// 这是依赖包
 	static final String BOOT_INF_LIB = "BOOT-INF/lib/";
 
 	public JarLauncher() {
@@ -43,8 +43,10 @@ public class JarLauncher extends ExecutableArchiveLauncher {
 	@Override
 	protected boolean isNestedArchive(Archive.Entry entry) {
 		if (entry.isDirectory()) {
+			//此目录BOOT-INF/classes/ 是用户的业务代码  class 文件
 			return entry.getName().equals(BOOT_INF_CLASSES);
 		}
+		// 如果是 BOOT-INF/lib/ 目录,这是 jar包
 		return entry.getName().startsWith(BOOT_INF_LIB);
 	}
 

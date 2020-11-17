@@ -38,13 +38,17 @@ public class MainMethodRunner {
 	 * @param args incoming arguments
 	 */
 	public MainMethodRunner(String mainClass, String[] args) {
+		// 记录要启动的全类名, 此处就是用户程序的 main方法类,即启动类
 		this.mainClassName = mainClass;
 		this.args = (args != null) ? args.clone() : null;
 	}
 
 	public void run() throws Exception {
+		// 加载 main 启动类
 		Class<?> mainClass = Thread.currentThread().getContextClassLoader().loadClass(this.mainClassName);
+		// 获取main方法
 		Method mainMethod = mainClass.getDeclaredMethod("main", String[].class);
+		// 调用main方法 进行程序的启动
 		mainMethod.invoke(null, new Object[] { this.args });
 	}
 

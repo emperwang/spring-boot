@@ -36,6 +36,7 @@ import org.springframework.boot.loader.jar.Handler;
  * @author Andy Wilkinson
  * @since 1.0.0
  */
+//  在这里自定义了一个 类加载器
 public class LaunchedURLClassLoader extends URLClassLoader {
 
 	static {
@@ -48,6 +49,8 @@ public class LaunchedURLClassLoader extends URLClassLoader {
 	 * @param parent the parent class loader for delegation
 	 */
 	public LaunchedURLClassLoader(URL[] urls, ClassLoader parent) {
+		// urls 要加载的文件的路径
+		// parent 其实就是类加载器
 		super(urls, parent);
 	}
 
@@ -72,12 +75,13 @@ public class LaunchedURLClassLoader extends URLClassLoader {
 			Handler.setUseFastConnectionExceptions(false);
 		}
 	}
-
+	// 加载类
 	@Override
 	protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
 		Handler.setUseFastConnectionExceptions(true);
 		try {
 			try {
+				// 定义package name
 				definePackageIfNecessary(name);
 			}
 			catch (IllegalArgumentException ex) {
@@ -90,6 +94,7 @@ public class LaunchedURLClassLoader extends URLClassLoader {
 							"Package " + name + " has already been " + "defined but it could not be found");
 				}
 			}
+			// 父类加载
 			return super.loadClass(name, resolve);
 		}
 		finally {

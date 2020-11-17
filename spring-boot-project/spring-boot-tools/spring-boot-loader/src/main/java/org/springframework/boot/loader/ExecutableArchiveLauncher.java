@@ -36,6 +36,8 @@ public abstract class ExecutableArchiveLauncher extends Launcher {
 
 	public ExecutableArchiveLauncher() {
 		try {
+			// 这里相当于时 获取到了代码的路径
+			// 如 C:/code-workspace/source/JavaBase/JavaBaseProject/target/classes/
 			this.archive = createArchive();
 		}
 		catch (Exception ex) {
@@ -50,12 +52,13 @@ public abstract class ExecutableArchiveLauncher extends Launcher {
 	protected final Archive getArchive() {
 		return this.archive;
 	}
-
+	// 获取具体要执行的全类名
 	@Override
 	protected String getMainClass() throws Exception {
 		Manifest manifest = this.archive.getManifest();
 		String mainClass = null;
 		if (manifest != null) {
+			// 要启动的类是  Start-Class 对应的属性值
 			mainClass = manifest.getMainAttributes().getValue("Start-Class");
 		}
 		if (mainClass == null) {
@@ -63,7 +66,7 @@ public abstract class ExecutableArchiveLauncher extends Launcher {
 		}
 		return mainClass;
 	}
-
+	// 这里是获取代理路径上的 Archive,即 jar包
 	@Override
 	protected List<Archive> getClassPathArchives() throws Exception {
 		List<Archive> archives = new ArrayList<>(this.archive.getNestedArchives(this::isNestedArchive));

@@ -47,7 +47,9 @@ public abstract class Launcher {
 	 */
 	protected void launch(String[] args) throws Exception {
 		JarFile.registerUrlProtocolHandler();
+		// 创建 classLoader
 		ClassLoader classLoader = createClassLoader(getClassPathArchives());
+		// 获取要启动的类  进行launch
 		launch(args, getMainClass(), classLoader);
 	}
 
@@ -60,8 +62,10 @@ public abstract class Launcher {
 	protected ClassLoader createClassLoader(List<Archive> archives) throws Exception {
 		List<URL> urls = new ArrayList<>(archives.size());
 		for (Archive archive : archives) {
+			// 得到所有文件的路径
 			urls.add(archive.getUrl());
 		}
+		//  创建一个类加载器, 最后类加载时 同样
 		return createClassLoader(urls.toArray(new URL[0]));
 	}
 
@@ -72,6 +76,7 @@ public abstract class Launcher {
 	 * @throws Exception if the classloader cannot be created
 	 */
 	protected ClassLoader createClassLoader(URL[] urls) throws Exception {
+		// 使用了一个自定义的类加载器
 		return new LaunchedURLClassLoader(urls, getClass().getClassLoader());
 	}
 
@@ -83,7 +88,9 @@ public abstract class Launcher {
 	 * @throws Exception if the launch fails
 	 */
 	protected void launch(String[] args, String mainClass, ClassLoader classLoader) throws Exception {
+		// 设置当前线程的类加载器
 		Thread.currentThread().setContextClassLoader(classLoader);
+		// 通过反射来调用户设置的 启动类
 		createMainMethodRunner(mainClass, args, classLoader).run();
 	}
 
@@ -113,9 +120,12 @@ public abstract class Launcher {
 	protected abstract List<Archive> getClassPathArchives() throws Exception;
 
 	protected final Archive createArchive() throws Exception {
+		// 保护域  即 securityManager
 		ProtectionDomain protectionDomain = getClass().getProtectionDomain();
 		CodeSource codeSource = protectionDomain.getCodeSource();
 		URI location = (codeSource != null) ? codeSource.getLocation().toURI() : null;
+		// 这里获取到了 class文件的路径
+		// 如: C:/code-workspace/source/JavaBase/JavaBaseProject/target/classes/
 		String path = (location != null) ? location.getSchemeSpecificPart() : null;
 		if (path == null) {
 			throw new IllegalStateException("Unable to determine code source archive");
@@ -124,6 +134,8 @@ public abstract class Launcher {
 		if (!root.exists()) {
 			throw new IllegalStateException("Unable to determine code source archive from " + root);
 		}
+		// 如果是目录就创建 ExplodedArchive
+		// 如果是jar包就创建为 JarFileArchive
 		return (root.isDirectory() ? new ExplodedArchive(root) : new JarFileArchive(root));
 	}
 
